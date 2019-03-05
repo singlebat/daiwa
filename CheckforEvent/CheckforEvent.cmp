@@ -1,0 +1,298 @@
+<aura:component controller="CheckforEventController"
+                implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <!-- handlers-->
+    <aura:handler name="init" value="{!this }" action="{!c.init }"/>
+    <aura:handler  event="force:refreshView" action="{!c.init}" />
+    <aura:attribute name="userId" type="id" default="{!$User.Id}"/>
+    <aura:attribute name="itemsSize" type="Integer"/>
+    <aura:attribute name="count" type="Integer" default="1"/>
+    <aura:attribute name="items" type="GeneralEventDetail__c[]" />
+    <aura:attribute name="myBool" type="Boolean" default="false"/>
+    <aura:attribute name="biko" type="String" default=""/>
+    <aura:attribute name="status" type="String" default=""/>
+    <aura:attribute name="onecheck" type="Boolean" default="false"/>
+    <aura:attribute name="selectall" type="Boolean" default="false"/>
+    <aura:attribute name="checkedList" type="Boolean[]"/>
+    
+    <aura:attribute name="conName" type="String" />
+    <aura:attribute name="simpleContact" type="Contact" default="{'sobjectType':'Contact'}"/>
+    <aura:attribute name="simpleAccount" type="Account" default="{'sobjectType':'Account'}"/>
+    
+    <!--sort use!-->
+    <aura:attribute name="arrowDirectionPro" type="String" default="arrowdown"/>
+    <aura:attribute name="flagP" type="String" default="true"/>    
+    <aura:attribute name="arrowDirectionCheck" type="String" default="arrowdown"/>
+    <aura:attribute name="flagC" type="String" default="true"/>    
+    <aura:attribute name="arrowDirectionStatus" type="String" default="arrowdown"/>
+    <aura:attribute name="flagS" type="String" default="true"/> 
+    <aura:attribute name="arrowDirectionST" type="String" default="arrowdown"/>
+    <aura:attribute name="flagST" type="String" default="true"/> 
+    <aura:attribute name="arrowDirectionTime" type="String" default="arrowdown"/>
+    <aura:attribute name="flagTime" type="String" default="true"/> 
+    <aura:attribute name="arrowDirectionBK" type="String" default="arrowdown"/>
+    <aura:attribute name="flagBK" type="String" default="true"/> 
+    <article class="slds-card slds-card_boundary forceRelatedListCardDesktop" aria-describedby="header_36:616;a"
+             data-aura-rendered-by="42:616;a" data-aura-class="forceRelatedListCardDesktop">
+        
+        <div class="slds-card__header slds-grid" data-aura-rendered-by="1636:0">
+            <header class="slds-media slds-media--center slds-has-flexi-truncate" data-aura-rendered-by="1637:0">
+                <div class="slds-media__body" data-aura-rendered-by="1639:0">
+                    <h2 id="header_1629:0" data-aura-rendered-by="1640:0">
+                        <span class="slds-card__header-title slds-truncate slds-m-right--xx-small" title="Action Items" data-aura-rendered-by="1642:0">一括更新</span>
+                    </h2>
+                </div>
+            </header>
+        </div>
+        <div class="slds-text-title_bold slds-page-header slds-p-vertical_xx-small">検索条件</div>
+        <div class="my-body slds-scope">
+            <div style="padding:2rem;margin-top: -11px;" class="slds-form slds-form_compound">
+                <div class="slds-form-element__group">
+                    <div class="slds-form-element__row">
+                        <div class="slds-form-element slds-size_1-of-3">
+                            顧客：
+                            <div class="slds-form-element__control">
+                                <force:inputField value="{!v.simpleContact.AccountId}"/>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-form-element slds-size_1-of-3">
+                            自分：
+                            <div class="slds-form-element__control">
+                                <ui:inputCheckbox  aura:id="output" value="{!v.myBool}" />
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-size_1-of-3">
+                        </div>
+                    </div>
+                    <div class="slds-form-element__row">
+                        <div class="slds-form-element slds-size_1-of-3">
+                            <div class="slds-form-element__control">
+                                <lightning:input name="conName" aura:id="conName" label="氏名：" value="{!v.conName}" />
+                            </div>
+                        </div>
+                        
+                        <div class="slds-form-element slds-size_1-of-3" style="{!if(v.myBool==true,'display:none','')}">
+                            RM担当部署：
+                            <div class="slds-form-element__control">
+                                <force:inputField value="{!v.simpleAccount.InChargeDepartment__c}"/>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-size_1-of-3" style="{!if(v.myBool==true,'display:none','')}">
+                            RM担当者：
+                            <div class="slds-form-element__control">
+                                <force:inputField value="{!v.simpleAccount.RelationshipManagement__c}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-form-element__row">
+                        <div class="slds-form-element slds-size_7-of-8">
+                        </div>
+                        <div class="slds-form-element slds-size_1-of-8" style="margin-top:10px;">
+                            <lightning:button class="slds-button" label="検索" onclick="{!c.doSearch}"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 初期化かどうかの判断!-->
+        <aura:if isTrue="{!v.count != 1}">
+            <div class="slds-text-title_bold slds-page-header slds-p-vertical_xx-small" style="margin-top:-20px;">検索結果</div>
+            <aura:if isTrue="{!v.itemsSize != 0}">
+                <div style="float:right;margin-top:10px;margin-right:10px;">
+                    <lightning:button class="slds-button" label="キャンセル" onclick="{!c.doSearch}"/>
+                    <lightning:button class="slds-button" label="保存" onclick="{!c.doSave}"/>
+                </div>
+                <div style="margin-top:50px;"/>
+                <div style="width:80%;margin-left:10%;margin-top:10px;" class="slds-form slds-form_compound">
+                    <div class="slds-box">
+                        <div class="slds-text-title" style="font-weight: bold;">
+                            一括入力欄
+                        </div>
+                        <div class="slds-form-element__group" style="margin-top:10px;">
+                            <div class="slds-form-element__row">
+                                <div class="slds-form-element slds-size_1-of-7">
+                                    チェック
+                                    <ui:inputCheckbox  aura:id="onecheck" value="{!v.onecheck}"/>
+                                </div>
+                                <div class="slds-form-element slds-size_2-of-7">
+                                    ステータス
+                                    <ui:inputSelect class="single" aura:id="InputSelectSingle" value="{!v.status}">
+                                        <ui:inputSelectOption label="---select---" text=""/>
+                                        <ui:inputSelectOption label="案内済" text="案内済"/>
+                                        <ui:inputSelectOption label="辞退" text="辞退"/>
+                                        <ui:inputSelectOption label="決定" text="決定"/>
+                                        <ui:inputSelectOption label="案内希望" text="案内希望"/>
+                                    </ui:inputSelect>
+                                </div>
+                                <div class="slds-form-element slds-size_3-of-7">
+                                    備考
+                                    <ui:inputText  value="{!v.biko}"/>
+                                </div>
+                                <div class="slds-form-element slds-size_1-of-7">
+                                    <div style="height:100%" class="slds-align_absolute-center">
+                                        <lightning:button class="slds-button" label="一括反映" onclick="{!c.oneClick}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:15px;"/>
+                
+                <table class="slds-table slds-table_bordered slds-max-medium-table_stacked-horizontal" style="table-layout:fixed;">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="slds-text-title_caps" scope="col" width="5%">
+                                <ui:inputCheckbox  aura:id="selectall" value="{!v.selectall}" change="{!c.selectAll}"/>
+                            </th>
+                            <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortprofile}" width="20%">
+                                <a onmouseover="{!c.MouseOverPro}" onmouseout="{!c.MouseLeavePro}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >プロフィール</span>
+                                    <div aura:id="divHelpPro" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionPro == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionPro != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                            <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortCheck}" width="10%">
+                                <a onmouseover="{!c.MouseOverCheck}" onmouseout="{!c.MouseLeaveCheck}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >チェック</span>
+                                    <div aura:id="divHelpCheck" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionCheck == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionCheck != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                            <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortStatus}" width="10%">
+                                <a onmouseover="{!c.MouseOverStatus}" onmouseout="{!c.MouseLeaveStatus}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >ステータス</span>
+                                    <div aura:id="divHelpStatus" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionStatus == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionStatus != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                             <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortBK}" width="45%">
+                                <a onmouseover="{!c.MouseOverBK}" onmouseout="{!c.MouseLeaveBK}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >備考</span>
+                                    <div aura:id="divHelpBK" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionBK == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionBK != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                            <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortST}" width="15%">
+                                <a onmouseover="{!c.MouseOverST}" onmouseout="{!c.MouseLeaveST}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >最終更新者</span>
+                                    <div aura:id="divHelpST" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionST == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionST != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                            <th class="slds-is-sortable  slds-text-title_caps" scope="col" onclick="{!c.sortTime}" width="15%">
+                                <a onmouseover="{!c.MouseOverTime}" onmouseout="{!c.MouseLeaveTime}"  class="slds-th__action slds-text-link--reset">
+                                    <span class="slds-truncate" >最終更新日時</span>
+                                    <div aura:id="divHelpTime" class="slds-hide">
+                                        <aura:if isTrue="{! v.arrowDirectionTime == 'arrowdown' }">
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowup" size="xx-small" alternativeText="sort arrow down"/>  
+                                            </div> 
+                                        </aura:if>  
+                                        <aura:if isTrue="{! v.arrowDirectionTime != 'arrowdown' }"> 
+                                            <div class="slds-icon_container">  
+                                                <lightning:icon iconName="utility:arrowdown" size="xx-small" alternativeText="sort arrow up"/>  
+                                            </div>
+                                        </aura:if>   
+                                    </div>
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <aura:iteration items="{!v.items}" var="item" indexVar="index">
+                            <tr class="slds-hint-parent">
+                                <td data-label="checkbox" scope="row">                            
+                                    <div class="slds-truncate">
+                                        <ui:inputCheckbox   value="{!item.selected__c}"/>
+                                    </div>
+                                </td>
+                                <td data-label="profile" scope="row">                               
+                                    <div class="slds-truncate" title="{!item.Subject}">
+                                        <a href="{!'/lightning/r/'+item.Contact__c+'/view'}">
+                                            {!if(item.ProfileName__c==null,item.profileNameForEventDetail__c,item.ProfileName__c)}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td data-label="check">
+                                    <div class="slds-truncate" title="{!item.Check__c}">
+                                        <!--<span data-num="{!index}"  onclick="{!c.onCheck}">!-->
+                                        <ui:inputCheckbox  value="{!item.Check__c}" />
+                                    </div>                                
+                                </td>
+                                <td data-label="Status">
+                                    <div class="slds-truncate" >{!item.Status__c}</div>
+                                </td>
+                                <td data-label="biko">
+                                    <div class="slds-truncate" >{!item.Remark__c}</div>
+                                </td>
+                                <td data-label="LastModifiedById">
+                                    <div class="slds-truncate" title="{!item.LastModifiedByName__c}">{!item.LastModifiedByName__c}</div>
+                                </td>
+                                <td data-label="LastModifiedDate">
+                                    <div class="slds-truncate" title="{!item.LastModifiedDate}" >
+                                        <ui:outputDate  aura:id="DateField" value="{!item.LastModifiedDate}"  format="MM/dd/yyyy" />
+                                    </div>    
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </table>
+                
+                <aura:set attribute="else">
+                    検索結果がありませんでした。
+                </aura:set>
+            </aura:if>
+        </aura:if>
+    </article>
+</aura:component>
