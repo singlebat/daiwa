@@ -1,10 +1,66 @@
 ({
+    dosearch : function(component) {
+        //必須チェック
+        var required=component.get("v.simpleContact.AccountId");
+        if(required==null||required==""){
+            component.set("v.customeMsg","この項目を入力してください");
+            return;
+        }else{
+            component.set("v.customeMsg","");
+        }
+     	//検索条件をゲット
+     	var userid=  $A.get('$SObjectType.CurrentUser.Id');
+        //顧客ID
+        var AccountId= component.get("v.simpleContact.AccountId");
+        //氏名
+        var conName= component.get("v.conName");
+        //RM担当部署
+        var InChargeDepartment= component.get("v.simpleAccount.InChargeDepartment__c");
+        //RM担当者
+        var RelationshipManagement= component.get("v.simpleAccount.RelationshipManagement__c");
+        //自分
+        var myBool= component.get("v.myBool");
+        //自分を選択する場合
+        if(myBool){
+            RelationshipManagement=  $A.get('$SObjectType.CurrentUser.Id');
+            InChargeDepartment=null;
+        }
+        var action = component.get("c.getItems");
+        //GeneralEvent__c id
+        action.setParams({"generalEventId": component.get("v.recordId"),
+                          "AccountId": AccountId,
+                          "conName": conName,
+                          "InChargeDepartment": InChargeDepartment,
+                          "RelationshipManagement": RelationshipManagement,
+                          "userid":userid
+                         });
+        action.setCallback(this, $A.getCallback(function (response) {
+            var state = response.getState();
+            if (state === "SUCCESS") 
+            {   
+                var result = response.getReturnValue();
+                component.set('v.items',result.tempGeneralEventDetail);
+                //画面初期化ではない状態を記録する
+                component.set("v.count",3);
+                component.set('v.itemsSize',result.itemsSize);
+                component.set('v.selectall',false);
+                console.log('--result:' + response.getReturnValue());
+            } else if (state === "ERROR") 
+            {
+				component.set("v.customeMsg","現在のユーザは顧客の編集権限がございません。");
+            }
+        }));
+        $A.enqueueAction(action);
+    
+	},
+        
     doAction : function(component,Stype) {
         var arrowDirectionC = component.get("v.arrowDirectionCheck");
         var arrowDirectionP = component.get("v.arrowDirectionPro");
         var arrowDirectionS = component.get("v.arrowDirectionStatus");
         var arrowDirectionST = component.get("v.arrowDirectionST");
         var arrowDirectionBK = component.get("v.arrowDirectionBK");
+        var arrowDirectionBS = component.get("v.arrowDirectionBS");
         var arrowDirectionTime = component.get("v.arrowDirectionTime");
         var items=component.get('v.items');
         var itemssize=component.get('v.itemsSize');
@@ -86,8 +142,9 @@
         if(Stype=="ST"){
             if(arrowDirectionST=="arrowdown"){
                 for (var i=1; i<itemssize; i++) {
+                    var v=items[i].ProfileSortOrder__c==null?'':items[i].ProfileSortOrder__c;
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (var v=items[i].LastModifiedByName__c, j=i-1; (j>=0&&v<items[j].LastModifiedByName__c); j--){
+                    for (j=i-1; (j>=0&&v<(items[j].ProfileSortOrder__c==null?'':items[j].ProfileSortOrder__c)); j--){
                         var p=items[j+1];
                         items[j+1]=items[j];
                         items[j]=p;
@@ -96,8 +153,9 @@
                 component.set("v.arrowDirectionST","arrowup");
             }else{
                 for (var i=1; i<itemssize; i++) {
+                    var v=items[i].ProfileSortOrder__c==null?'':items[i].ProfileSortOrder__c;
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (var v=items[i].LastModifiedByName__c, j=i-1; (j>=0&&v>items[j].LastModifiedByName__c); j--){
+                    for (j=i-1; (j>=0&&v>(items[j].ProfileSortOrder__c==null?'':items[j].ProfileSortOrder__c)); j--){
                         var p=items[j+1];
                         items[j+1]=items[j];
                         items[j]=p;
@@ -152,6 +210,31 @@
                     }
                 }
                 component.set("v.arrowDirectionTime","arrowdown");              
+            }
+        }
+        if(Stype=="BS"){
+            if(arrowDirectionBS=="arrowdown"){
+                for (var i=1; i<itemssize; i++) {
+                    var v=items[i].Department__c==null?items[i].DepartmentForEventDetail__c:items[i].Department__c;
+                    //如果第i个元素小于第j个，则第j个向后移动
+                    for (j=i-1; (j>=0&&v<(items[j].Department__c==null?items[j].DepartmentForEventDetail__c:items[j].Department__c)); j--){
+                        var p=items[j+1];
+                        items[j+1]=items[j];
+                        items[j]=p;
+                    }
+                }
+                component.set("v.arrowDirectionBS","arrowup");
+            }else{
+                for (var i=1; i<itemssize; i++) {
+                    var v=items[i].Department__c==null?items[i].DepartmentForEventDetail__c:items[i].Department__c;
+                    //如果第i个元素小于第j个，则第j个向后移动
+                    for (j=i-1; (j>=0&&v>(items[j].Department__c==null?items[j].DepartmentForEventDetail__c:items[j].Department__c)); j--){
+                        var p=items[j+1];
+                        items[j+1]=items[j];
+                        items[j]=p;
+                    }
+                }
+                component.set("v.arrowDirectionBS","arrowdown");              
             }
         }
         component.set('v.items',items);

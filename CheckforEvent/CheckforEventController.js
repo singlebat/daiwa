@@ -2,50 +2,43 @@
     init: function (component, event, helper) {
         //画面初期化の状態を記録する
         component.set("v.count",1);
-    },
-    doSearch: function (component, event, helper) {
-        //検索条件をゲット
-        //顧客ID
-        var AccountId= component.get("v.simpleContact.AccountId");
-        //氏名
-        var conName= component.get("v.conName");
-        //RM担当部署
-        var InChargeDepartment= component.get("v.simpleAccount.InChargeDepartment__c");
-        //RM担当者
-        var RelationshipManagement= component.get("v.simpleAccount.RelationshipManagement__c");
-        //自分
-        var myBool= component.get("v.myBool");
-        //自分を選択する場合
-        if(myBool){
-            RelationshipManagement=  $A.get('$SObjectType.CurrentUser.Id');
-            InChargeDepartment=null;
-        }
-        var action = component.get("c.getItems");
-        //GeneralEvent__c id
-        action.setParams({"generalEventId": component.get("v.recordId"),
-                          "AccountId": AccountId,
-                          "conName": conName,
-                          "InChargeDepartment": InChargeDepartment,
-                          "RelationshipManagement": RelationshipManagement
-                         });
+     	var action = component.get("c.initpicklist");
         action.setCallback(this, $A.getCallback(function (response) {
             var state = response.getState();
-            if (state === "SUCCESS") 
-            {   
-                var result = response.getReturnValue();
-                component.set('v.items',result.tempGeneralEventDetail);
-                //画面初期化ではない状態を記録する
-                component.set("v.count",3);
-                component.set('v.itemsSize',result.itemsSize);
-                console.log('--result:' + response.getReturnValue());
-            } 
-            else if (state === "ERROR") 
-            {
-                var errors = response.getError();
-                console.error(errors);
+            if (state === "SUCCESS") {   
+              	var result = response.getReturnValue();
+                component.set('v.listValues',result);
+            } else if (state === "ERROR") {
+				var toastEvent = $A.get("e.force:showToast");
+    			toastEvent.setParams({
+    				"title": "失敗!",
+    				"message": "初期か失敗しました。",
+    				"type":"error"
+    			});
+    			toastEvent.fire();
             }
         }));
         $A.enqueueAction(action);
+    },
+    doSearch: function (component, event, helper) {
+       	helper.dosearch(component);
+    },
+    doCancel: function (component, event, helper) {
+       helper.dosearch(component);
+    },
+    doShow: function (component, event, helper) {
+        var va=component.get('v.Showflag');
+        if(va=='true'){
+            component.set('v.Showflag','false');
+        }else{
+            component.set('v.Showflag','true');
+        }
+    },
+    Show: function (component, event, helper) {
+         component.set('v.style1','slds-popover slds-popover_tooltip slds-nubbin_bottom-right');
+    },
+    hide: function (component, event, helper) {
+         component.set('v.style1','slds-hide');
     },
     doSave: function (component, event, helper) {
         var saveresult=[];
@@ -58,6 +51,16 @@
                 items[i].GeneralEvent__c=eventID;
             	saveresult.push(items[i]);
             }
+        }
+        if(saveresult==null||saveresult.length==0){
+            var toastEvent = $A.get("e.force:showToast");
+    			toastEvent.setParams({
+    				"title": "登録できませんでした!",
+    				"message": "選択してください！",
+    				"type":"error"
+    			});
+    		toastEvent.fire();
+            return;
         }
          var action = component.get("c.saveItems");
         //GeneralEvent__c id
@@ -78,7 +81,7 @@
     			toastEvent.setParams({
     				"title": "失敗!",
     				"message": "保存できませんでした。",
-    				"type":"fail"
+    				"type":"error"
     			});
     			toastEvent.fire();
             }
@@ -129,6 +132,7 @@
         $A.util.addClass(component.find("divHelpST"), 'slds-hide');
         $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
         $A.util.addClass(component.find("divHelpBK"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         
         component.set("v.flagST","true");
         component.set("v.flagC","true");
@@ -136,6 +140,7 @@
         component.set("v.flagBK","true");
         component.set("v.flagP","false");
         component.set("v.flagTime","true");
+        component.set("v.flagBS","true");
     },
     sortCheck: function (component, event, helper) {
         helper.doAction(component,"Check");
@@ -145,6 +150,7 @@
         $A.util.addClass(component.find("divHelpST"), 'slds-hide');
         $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
         $A.util.addClass(component.find("divHelpBK"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         
         component.set("v.flagST","true");
         component.set("v.flagS","true");
@@ -152,6 +158,7 @@
         component.set("v.flagBK","true");
         component.set("v.flagP","true");
         component.set("v.flagTime","true");
+        component.set("v.flagBS","true");
     },
     sortStatus: function (component, event, helper) {
         helper.doAction(component,"Status");
@@ -161,6 +168,7 @@
         $A.util.addClass(component.find("divHelpST"), 'slds-hide');
         $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
         $A.util.addClass(component.find("divHelpBK"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         
         component.set("v.flagST","true");
         component.set("v.flagC","true");
@@ -168,6 +176,7 @@
         component.set("v.flagS","false");
         component.set("v.flagBK","true");
         component.set("v.flagTime","true");
+        component.set("v.flagBS","true");
     },
     sortST: function (component, event, helper) {
         helper.doAction(component,"ST");
@@ -177,6 +186,7 @@
         $A.util.removeClass(component.find("divHelpST"), 'slds-hide');
         $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
         $A.util.addClass(component.find("divHelpBK"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         
         component.set("v.flagST","false");
         component.set("v.flagC","true");
@@ -184,6 +194,7 @@
         component.set("v.flagS","true");
         component.set("v.flagBK","true");
         component.set("v.flagTime","true");
+        component.set("v.flagBS","true");
     },
      sortBK: function (component, event, helper) {
         helper.doAction(component,"BK");
@@ -193,6 +204,7 @@
         $A.util.addClass(component.find("divHelpST"), 'slds-hide');
         $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
         $A.util.removeClass(component.find("divHelpBK"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
          
         component.set("v.flagST","true");
         component.set("v.flagC","true");
@@ -200,6 +212,7 @@
         component.set("v.flagS","true");
         component.set("v.flagBK","false");
         component.set("v.flagTime","true");
+        component.set("v.flagBS","true");
     },
     sortTime: function (component, event, helper) {
         helper.doAction(component,"Time");
@@ -208,6 +221,7 @@
         $A.util.addClass(component.find("divHelpStatus"), 'slds-hide');
         $A.util.addClass(component.find("divHelpST"), 'slds-hide');
         $A.util.removeClass(component.find("divHelpTime"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         
         component.set("v.flagST","true");
         component.set("v.flagC","true");
@@ -215,6 +229,24 @@
         component.set("v.flagS","true");
         component.set("v.flagBK","true");
         component.set("v.flagTime","false");
+        component.set("v.flagBS","true");
+    },
+     sortBS: function (component, event, helper) {
+        helper.doAction(component,"BS");
+        $A.util.addClass(component.find("divHelpCheck"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpPro"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpStatus"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpST"), 'slds-hide');
+        $A.util.addClass(component.find("divHelpTime"), 'slds-hide');
+        $A.util.removeClass(component.find("divHelpBS"), 'slds-hide');
+         
+        component.set("v.flagST","true");
+        component.set("v.flagC","true");
+        component.set("v.flagP","true");
+        component.set("v.flagS","true");
+        component.set("v.flagBK","true");
+        component.set("v.flagBS","false");
+        component.set("v.flagTime","true");
     },
     MouseOverPro : function(component, event, helper){
         $A.util.removeClass(component.find("divHelpPro"), 'slds-hide');
@@ -233,6 +265,9 @@
     },
     MouseOverBK : function(component, event, helper){
         $A.util.removeClass(component.find("divHelpBK"), 'slds-hide');
+    },
+     MouseOverBS : function(component, event, helper){
+        $A.util.removeClass(component.find("divHelpBS"), 'slds-hide');
     },
     MouseLeavePro: function(component, event, helper){
         var flagP=component.get("v.flagP");
@@ -268,6 +303,12 @@
         var flagBK=component.get("v.flagBK");
         if(flagBK=="true"){
             $A.util.addClass(component.find("divHelpBK"), 'slds-hide');
+        }
+    },
+    MouseLeaveBS: function(component, event, helper){
+        var flagBS=component.get("v.flagBS");
+        if(flagBS=="true"){
+            $A.util.addClass(component.find("divHelpBS"), 'slds-hide');
         }
     },
      onCheck: function(component, event, helper){
