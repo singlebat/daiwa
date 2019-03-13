@@ -47,7 +47,7 @@ public class CheckforEventController {
                         gen.Contact__c=con.id;
                         gen.profileNameForEventDetail__c=con.Name;
                         gen.profilesortedForEvent__c=con.ProfileNo__c;
-                        gen.DepartmentForEventDetail__c=con.Department;
+                        gen.DepartmentForEventDetail__c=con.Title;
                         GeneralEventDetailList.add(gen);
                     }else{
                         try{
@@ -73,12 +73,12 @@ public class CheckforEventController {
         String sql='select id, ';
         sql=sql+ 'Name,';
         sql=sql+ 'ProfileNo__c,';
-        sql=sql+ 'Department,';
+        sql=sql+ 'Title,';
         sql=sql+ '(select ';
         sql=sql+ 'id, ';
         sql=sql+ 'Contact__c, ';
         sql=sql+ 'ProfileName__c, ';
-        sql=sql+ 'Department__c, ';
+        sql=sql+ 'profilefileForEventdetail__c, ';
         sql=sql+ 'ProfileSortOrder__c, ';        
         sql=sql+ 'Check__c, ';
         sql=sql+ 'Remark__c, ';
@@ -100,7 +100,7 @@ public class CheckforEventController {
         if(RelationshipManagement!=null &&RelationshipManagement!=''){
             sql=sql+ ' and Account.RelationshipManagement__c=\''+RelationshipManagement+'\' '; 
         }
-        sql=sql+ ' limit 500 ';   
+        sql=sql+ ' order by ProfileNo__c limit 500 ';   
         system.debug(sql);
         List<Contact> newContact= new List<Contact>();
         try{
@@ -118,7 +118,18 @@ public class CheckforEventController {
         for(GeneralEventDetail__c ge:saveList){
             ge.selected__c=false;
         }
-        upsert saveList;
+        try{
+             upsert saveList;
+        }catch(exception e){
+			String mes=e.getMessage();
+            Integer start= mes.indexOf('EXCEPTION');
+            if(mes.length()>=start+10){
+                String newmes=mes.substring(start+10);
+            	throw new AuraHandledException(newmes);
+            }else{
+                throw new AuraHandledException(mes);
+            }
+        }
     }
     
     public Static List<String> GetFieldPikclistValues(String ObjectApi_name, String picklistField)
