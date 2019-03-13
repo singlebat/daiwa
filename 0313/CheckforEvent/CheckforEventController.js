@@ -2,6 +2,7 @@
     init: function (component, event, helper) {
         //画面初期化の状態を記録する
         component.set("v.count",1);
+        component.set('v.savebuttonStyle','');
         var action = component.get("c.initpicklist");
         action.setCallback(this, $A.getCallback(function (response) {
             var state = response.getState();
@@ -31,6 +32,8 @@
                 var result = response.getReturnValue();
                 if(!result){
                     component.set('v.savebuttonStyle','slds-hide');
+                }else{
+                    component.set('v.savebuttonStyle','');
                 }
             } else if (state === "ERROR") {
                 var toastEvent = $A.get("e.force:showToast");
@@ -92,10 +95,14 @@
             if (state === "SUCCESS") {   
                 helper.dosearch(component,'保存しました。','save');
             } else if (state === "ERROR") {
+                var errors = action.getError();
+                var addmes=errors[0].message;
                 var toastEvent = $A.get("e.force:showToast");
                 toastEvent.setParams({
                     "title": "失敗!",
-                    "message": "保存できませんでした。",
+                    "message": "保存できませんでした。"+addmes,
+                    "duration":"10000",
+                    "mode": "pester",
                     "type":"error"
                 });
                 toastEvent.fire();

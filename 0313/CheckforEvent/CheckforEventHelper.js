@@ -50,7 +50,7 @@
                           "RelationshipManagement": RelationshipManagement,
                           "userid":userid
                          });
-         $A.util.toggleClass(component.find("mySpinner"),"slds-hide");
+        $A.util.toggleClass(component.find("mySpinner"),"slds-hide");
         action.setCallback(this,$A.getCallback(function (response) {
             var state = response.getState();
             if (state === "SUCCESS") 
@@ -88,11 +88,12 @@
                     });
                     toastEvent.fire();    
                 }
+                $A.util.toggleClass(component.find("mySpinner"),"slds-hide");
+                component.set("v.count",1);
             }
         }));
         $A.enqueueAction(action);
     },
-    
     doAction : function(component,Stype) {
         var arrowDirectionC = component.get("v.arrowDirectionCheck");
         var arrowDirectionP = component.get("v.arrowDirectionPro");
@@ -231,8 +232,9 @@
         if(Stype=="Time"){
             if(arrowDirectionTime=="arrowdown"){
                 for (var i=1; i<itemssize; i++) {
+                    var v=items[i].LastModifiedDate==null?'':items[i].LastModifiedDate;
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (var v=items[i].LastModifiedDate, j=i-1; (j>=0&&v<items[j].LastModifiedDate); j--){
+                    for (var j=i-1; (j>=0&&v<(items[j].LastModifiedDate==null?'':items[j].LastModifiedDate)); j--){
                         var p=items[j+1];
                         items[j+1]=items[j];
                         items[j]=p;
@@ -241,8 +243,9 @@
                 component.set("v.arrowDirectionTime","arrowup");
             }else{
                 for (var i=1; i<itemssize; i++) {
+                    var v=items[i].LastModifiedDate==null?'':items[i].LastModifiedDate;
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (var v=items[i].LastModifiedDate, j=i-1; (j>=0&&v>items[j].LastModifiedDate); j--){
+                    for (var j=i-1; (j>=0&&v>(items[j].LastModifiedDate==null?'':items[j].LastModifiedDate)); j--){
                         var p=items[j+1];
                         items[j+1]=items[j];
                         items[j]=p;
@@ -254,23 +257,41 @@
         if(Stype=="BS"){
             if(arrowDirectionBS=="arrowdown"){
                 for (var i=1; i<itemssize; i++) {
-                    var v=items[i].Department__c==null?items[i].DepartmentForEventDetail__c:items[i].Department__c;
+                    var v=items[i].profilefileForEventdetail__c==null?items[i].DepartmentForEventDetail__c:items[i].profilefileForEventdetail__c;
+                    if(v==null){
+                        v='';
+                    }
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (j=i-1; (j>=0&&v<(items[j].Department__c==null?items[j].DepartmentForEventDetail__c:items[j].Department__c)); j--){
-                        var p=items[j+1];
-                        items[j+1]=items[j];
-                        items[j]=p;
+                    for (var j=i-1; j>=0; j--){
+                        var n= (items[j].profilefileForEventdetail__c==null?items[j].DepartmentForEventDetail__c:items[j].profilefileForEventdetail__c);
+                        if(n==null){
+                            n='';
+                        }
+                        if(v<n){
+                            var p=items[j+1];
+                            items[j+1]=items[j];
+                            items[j]=p;
+                        }
                     }
                 }
                 component.set("v.arrowDirectionBS","arrowup");
             }else{
                 for (var i=1; i<itemssize; i++) {
-                    var v=items[i].Department__c==null?items[i].DepartmentForEventDetail__c:items[i].Department__c;
+                    var v=items[i].profilefileForEventdetail__c==null?items[i].DepartmentForEventDetail__c:items[i].profilefileForEventdetail__c;
+                    if(v==null){
+                        v='';
+                    }
                     //如果第i个元素小于第j个，则第j个向后移动
-                    for (j=i-1; (j>=0&&v>(items[j].Department__c==null?items[j].DepartmentForEventDetail__c:items[j].Department__c)); j--){
-                        var p=items[j+1];
-                        items[j+1]=items[j];
-                        items[j]=p;
+                    for (var j=i-1; j>=0; j--){
+                        var n= (items[j].profilefileForEventdetail__c==null?items[j].DepartmentForEventDetail__c:items[j].profilefileForEventdetail__c);
+                        if(n==null){
+                            n='';
+                        }
+                        if(v>n){
+                            var p=items[j+1];
+                            items[j+1]=items[j];
+                            items[j]=p;
+                        }
                     }
                 }
                 component.set("v.arrowDirectionBS","arrowdown");              

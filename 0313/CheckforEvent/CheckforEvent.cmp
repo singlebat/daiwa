@@ -283,7 +283,7 @@
                             </td>
                             <td data-label="Department">
                                 <div class="slds-truncate" title="">
-                                    {!if(item.Department__c==null,item.DepartmentForEventDetail__c,item.Department__c)}
+                                    {!if(item.profilefileForEventdetail__c==null,item.DepartmentForEventDetail__c,item.profilefileForEventdetail__c)}
                                 </div>
                             </td>
                             <td data-label="check">
@@ -306,14 +306,12 @@
                             </td>
                             <td data-label="biko">
                                 <div class="slds-truncate" >
-                                    <span data-num="{!index}"  onclick="{!c.onCheck2}">
-                                        <ui:inputText  value="{!item.Remark__c}"/>
-                                    </span>
+                                        <ui:inputText labelClass="{!index}" value="{!item.Remark__c}" keyup="{!c.onCheck}" updateOn="keyup"/>
                                 </div>
                             </td>
                             <td data-label="LastModifiedDate">
                                 <div class="slds-truncate" title="{!item.LastModifiedDate}" style="font-size:10px;">
-                                    <ui:outputDate aura:id="DateField" value="{!item.LastModifiedDate}" format="yyyy/mm/dd hh:mm"/>
+                                    <ui:outputDate aura:id="DateField" value="{!item.LastModifiedDate}" format="yyyy/M/D HH:MM"/>
                                 </div>    
                             </td>
                         </tr>
