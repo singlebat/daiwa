@@ -1,0 +1,121 @@
+<aura:component controller="AccountAssetListPageController" implements="force:appHostable,flexipage:availableForAllPageTypes" access="global" >
+    <aura:attribute name="resData" type="list"/>
+    <aura:attribute name="records" type="CUSTOMER_ASSET__c[]"/>
+    <aura:attribute name="recCount" type="integer" default="0" />
+	<aura:attribute name="arrowDirection" type="string" default="arrowup" />
+    <aura:attribute name="isAsc" type="boolean" default="true" /> 
+    <aura:attribute name="selectedTabsoft" type="string" default="accountName" />
+    <aura:attribute name="totalSize" type="Integer"/>
+    <aura:attribute name="start" type="Integer"/>
+	<aura:attribute name="end" type="Integer"/>
+    <aura:attribute name="now" type="Integer"/>
+    <aura:attribute name="nowlist" type="list"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.init}"/>
+    <div class="slds-box slds-theme_default">
+    <div style="background-color:#fff;text-align:left;height:100%;padding:0.5rem 1rem"><B>検索結果</B>&nbsp;(全{!v.recCount}件)</div>
+    <div style="background-color:#fff;text-align:center;height:100%;padding:0.5rem 1rem">
+        <table class="slds-table slds-table--bordered slds-table--striped slds-table--cell-buffer slds-table--fixed-layout">
+        	<thead>
+                <tr class="slds-text-heading--label">
+                    <th class="slds-is-sortable slds-text-title--caps" scope="col" onclick="{!c.sortAccountName}">
+                        <a href="javascript:void(0);" class="slds-th__action slds-text-link--reset">
+                            <span class="slds-assistive-text">Sort</span>
+                            <span class="slds-truncate" title="accountName">アカウント名</span>  
+                            <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.selectedTabsoft == 'accountName') }">&#9660; </aura:if>  
+                            <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.selectedTabsoft == 'accountName') }">&#9650; </aura:if>                        
+                        </a>
+                    </th>
+                    <th scope="col"><div class="slds-truncate" title="投資カテゴリー">投資カテゴリー</div></th>
+                    <th scope="col"><div class="slds-truncate" title="リスク">口座リスクスコア</div></th>
+                    <th scope="col"><div class="slds-truncate" title="アセットアロケーション">アセットアロケーション</div></th>
+                    <th class="slds-is-sortable slds-text-title--caps" scope="col" onclick="{!c.sortAmount}">
+                        <a href="javascript:void(0);" class="slds-th__action slds-text-link--reset">
+                            <span class="slds-assistive-text">Sort</span>
+                            <span class="slds-truncate" title="amount">残高</span>
+                            <aura:if isTrue="{! and(v.arrowDirection == 'arrowdown', v.selectedTabsoft == 'amount') }">&#9660;</aura:if>
+                            <aura:if isTrue="{! and(v.arrowDirection != 'arrowdown', v.selectedTabsoft == 'amount') }">&#9650;</aura:if>     
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <aura:iteration items="{!v.records}" var="record">
+                <tr>
+                    <td style="padding-left:0.5rem">
+                        <aura:if isTrue="{!record.parent_child_flg__c == 1}">
+                        	<img alt="" src="{!$Resource.blueArrow}" id="{!record.kokyaku__c}" onclick="{!c.displayChildData}" width="15" height="15"/>&nbsp;
+                            <span style="color: blue;"><B>{!record.account_name__c}</B>
+                            <br/>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            {!record.kokyaku__r.child_count__c}アカウント
+                            </span>
+                        </aura:if>
+                        <aura:if isTrue="{!and(record.parent_child_flg__c == 2, record.parent_id__c != null)}">
+                        	<lightning:icon iconName="utility:right" size="x-small"/>&nbsp;
+                            <a id="{!record.kokyaku__c}" onclick="{!c.navToAccDetail}">
+                            	{!record.account_name__c}
+                            </a>
+                        </aura:if>
+                        <aura:if isTrue="{!and(record.parent_child_flg__c == 2, record.parent_id__c == null)}">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span>
+                                <B>
+                                <a id="{!record.kokyaku__c}" onclick="{!c.navToAccDetail}" style="color: blue;">
+                                    {!record.account_name__c}
+                                </a>
+                                </B>
+                            </span>
+                        </aura:if>
+                        <aura:if isTrue="{!and(record.parent_child_flg__c == 0, record.parent_id__c == null)}">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span>
+                                <B>
+                                <a id="{!record.kokyaku__c}" onclick="{!c.navToAccDetail}" style="color: blue;">
+                                    {!record.account_name__c}
+                                </a>
+                                </B>
+                            </span>
+                        </aura:if>
+                    </td>
+                    <td style="padding-left:0.5rem">
+                        <aura:if isTrue="{!and(record.parent_child_flg__c == 2)}">
+                            {!record.kokyaku__r.toushi_category__c}
+                        </aura:if>
+                    </td>
+                    <td style="padding-left:0.5rem">
+                        <aura:if isTrue="{!and(record.parent_child_flg__c == 2)}">
+                            <ui:outputRichText value="{!record.risk_pre_img__c}"/>
+                        </aura:if>
+                    </td>
+                    <td style="padding-left:0.5rem">
+                        <ui:outputRichText value="{!record.asset_img__c}"/>
+                        <!--<ui:outputRichText value="{!record.hyouka_sum_start__c+record.hyouka_sum_img_1__c+record.hyouka_sum_img_2__c+record.hyouka_sum_img_3__c+record.hyouka_sum_img_4__c+record.hyouka_sum_img_5__c+record.hyouka_sum_img_6__c+record.hyouka_sum_end__c}"/>-->
+                    </td>
+                    <td style="padding-left:0.5rem"><lightning:formattedNumber value="{!record.hyouka_sum_all__c}"/>円</td>
+                </tr>
+                </aura:iteration>
+            </tbody>
+        </table>
+         <lightning:layoutItem padding="around-small" flexibility="auto">
+             	<lightning:button  variant="base" label="＜＜"  disabled="{! v.now == 0}" onclick="{! c.first }"/>
+             	&nbsp;
+             	<lightning:button  variant="base" label="＜"  disabled="{! v.now == 0}" onclick="{! c.previous }"/>
+             	&nbsp;
+             {!v.now+1}ページ目/{!v.totalSize}ページ
+             	&nbsp;
+             	<lightning:button  variant="base" label="＞"  disabled="{! v.now == v.totalSize-1}" onclick="{! c.next }"/>
+             	&nbsp;
+             	<lightning:button  variant="base" label="＞＞"  disabled="{! v.now == v.totalSize-1}" onclick="{! c.last }"/>
+                <!--        <lightning:button label="First" iconName="utility:left" iconPosition="left"
+                                  onclick="{!c.first}" disabled="{! v.now == 0}"/>
+                <lightning:button iconName="utility:chevronleft" iconPosition="left"
+                                  onclick="{!c.previous}" disabled="{! v.now == 0}"/>
+                <lightning:button iconName="utility:chevronright" iconPosition="right" 
+                                  disabled="{! v.now == v.totalSize-1}" onclick="{!c.next}"/>
+                <lightning:button label="Last" iconName="utility:right" iconPosition="right" 
+                                  disabled="{! v.now == v.totalSize-1}" onclick="{!c.last}"/> -->
+        </lightning:layoutItem>
+    </div>
+</div>
+</aura:component>
